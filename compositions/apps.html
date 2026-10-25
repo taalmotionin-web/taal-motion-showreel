@@ -1,0 +1,164 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: var(--color-bone);
+    }
+    .ap-ground { position: absolute; inset: 0; opacity: 0; }
+    #ap-ink { background: var(--color-ink); }
+    #ap-saffron { background: #ffb02e; }
+    .ap-word {
+      position: absolute;
+      left: 96px;
+      white-space: nowrap;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 900;
+      letter-spacing: -0.045em;
+    }
+    .ap-word .ch { display: inline-block; }
+    #ap-app-wrap { position: absolute; inset: 0; perspective: 1400px; perspective-origin: 600px 540px; }
+    #ap-app { top: 286.2px; font-size: 560px; line-height: 560px; color: var(--color-ink); }
+    #ap-saas { top: 328px; font-size: 500px; line-height: 500px; color: var(--color-bone); opacity: 0; }
+    .sh { position: absolute; }
+    #ap-sun { left: 1300px; top: 230px; width: 500px; height: 500px; border-radius: 50%; background: #ffb02e; }
+    #ap-wedge { left: 1550px; top: 230px; width: 250px; height: 250px; border-top-right-radius: 250px; background: var(--color-ink); }
+    #ap-stripes { left: 1300px; top: 820px; width: 520px; height: 140px; background: repeating-linear-gradient(to bottom, #ff4b3e 0 16px, transparent 16px 32px); }
+    .ap-dotc { position: absolute; border-radius: 50%; opacity: 0; }
+    .ap-line { position: absolute; height: 4px; background: var(--color-bone); transform-origin: 0% 50%; opacity: 0; }
+    #ap-card { left: 1064px; top: 70px; width: 760px; height: 428px; border-radius: 24px; overflow: hidden; background: #f4f1ea; }
+    #ap-card video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    #ap-half { left: 120px; top: 0; width: 420px; height: 210px; border-radius: 0 0 210px 210px; background: #ff4b3e; }
+    #ap-eye { left: 640px; top: 120px; width: 200px; height: 200px; border-radius: 50%; background: var(--color-ink); }
+    #ap-eye-w { position: absolute; left: 34px; top: 34px; width: 132px; height: 132px; border-radius: 50%; background: #f4f1ea; }
+    #ap-pupil { position: absolute; left: 70px; top: 70px; width: 60px; height: 60px; border-radius: 50%; background: var(--color-ink); }
+    #ap-bar { position: absolute; left: 0; top: 540px; width: 1920px; height: 540px; overflow: hidden; }
+    #ap-explainers { position: absolute; left: 96px; top: 0; white-space: nowrap; font-family: var(--font-display), sans-serif; font-weight: 900;
+      font-size: 262px; line-height: 262px; letter-spacing: -0.045em; color: var(--color-ink); }
+    #ap-explainers .ch { display: inline-block; }
+    #ap-dot { position: absolute; left: 0; top: 0; width: 40px; height: 40px; border-radius: 50%; background: var(--color-cobalt); }
+    #ap-flood { position: absolute; inset: 0; background: var(--color-cobalt); clip-path: circle(0px at 0px 0px); }
+    .ap-a, .ap-c { opacity: 0; }
+  </style>
+  <div id="root" data-composition-id="apps" data-width="1920" data-height="1080" data-motion-blur="off">
+    <!-- A: APP on bone -->
+    <div class="sh ap-a" id="ap-sun"></div>
+    <div class="sh ap-a" id="ap-wedge"></div>
+    <div class="sh ap-a" id="ap-stripes"></div>
+    <div id="ap-app-wrap"><div class="ap-word" id="ap-app"><span class="ch">A</span><span class="ch">P</span><span class="ch">P</span></div></div>
+    <!-- B: SAAS on ink, a dot-and-line constellation drawing on the 16ths -->
+    <div class="ap-ground" id="ap-ink"></div>
+    <div id="ap-const" data-layout-ignore></div>
+    <div class="ap-word" id="ap-saas"><span class="ch">S</span><span class="ch">A</span><span class="ch">A</span><span class="ch">S</span></div>
+    <!-- C: EXPLAINERS on saffron with the Chukta explainer -->
+    <div class="ap-ground" id="ap-saffron"></div>
+    <div class="sh ap-c" id="ap-half"></div>
+    <div class="sh ap-c" id="ap-eye"><div id="ap-eye-w"></div><div id="ap-pupil"></div></div>
+    <div class="sh ap-c" id="ap-card">
+      <video id="ap-v-invoice" class="clip" src="assets/media/chukta.mp4" data-start="2.05" data-duration="1.1" data-media-start="7.0" data-track-index="2" muted playsinline></video>
+      <video id="ap-v-paid" class="clip" src="assets/media/chukta.mp4" data-start="3.1333" data-duration="1.0667" data-media-start="16.3" data-track-index="3" muted playsinline></video>
+    </div>
+    <div id="ap-bar" class="ap-c"><div id="ap-explainers"><span class="ch">E</span><span class="ch">X</span><span class="ch">P</span><span class="ch">L</span><span class="ch">A</span><span class="ch">I</span><span class="ch">N</span><span class="ch">E</span><span class="ch">R</span><span class="ch">S</span></div></div>
+    <div id="ap-dot"></div>
+    <div id="ap-flood"></div>
+  </div>
+  <script>
+    (function () {
+      const START = 253 / 30;
+      const at = (fb) => Math.round(fb * 15.79016) / 30 - START;
+      const root = document.querySelector('[data-composition-id="apps"]');
+      const $ = (s) => root.querySelector(s);
+      const $$ = (s) => Array.from(root.querySelectorAll(s));
+
+      function kern(line, px) {
+        const c = document.createElement("canvas").getContext("2d");
+        c.font = `900 ${px}px "Inter"`;
+        const chs = Array.from(line.querySelectorAll(".ch"));
+        chs.forEach((el, i) => {
+          if (i === chs.length - 1) return;
+          const a = el.textContent, b = chs[i + 1].textContent;
+          el.style.marginRight = (c.measureText(a + b).width - c.measureText(a).width - c.measureText(b).width).toFixed(2) + "px";
+        });
+      }
+
+      function build() {
+        kern($("#ap-app"), 560);
+        kern($("#ap-saas"), 500);
+        kern($("#ap-explainers"), 262);
+        // Constellation for SAAS: dots of different sizes joined by thin lines.
+        const dots = [[1600, 140, 18, "#f4f1ea"], [1760, 210, 34, "#ff4b3e"], [1680, 340, 12, "#ffb02e"], [1830, 430, 24, "#f4f1ea"],
+          [1620, 530, 40, "#ffb02e"], [1790, 650, 16, "#ff4b3e"], [1660, 770, 28, "#f4f1ea"], [1840, 890, 14, "#ffb02e"]];
+        const links = [[0, 1], [1, 3], [2, 4], [4, 5], [5, 7], [4, 6]];
+        const cst = $("#ap-const");
+        dots.forEach(([x, y, r, col], i) => {
+          const d = document.createElement("div");
+          d.className = "ap-dotc";
+          d.id = "ap-d" + i;
+          Object.assign(d.style, { left: x - r + "px", top: y - r + "px", width: 2 * r + "px", height: 2 * r + "px", background: col });
+          cst.appendChild(d);
+        });
+        links.forEach(([a, b], i) => {
+          const [x1, y1] = dots[a], [x2, y2] = dots[b];
+          const l = document.createElement("div");
+          l.className = "ap-line";
+          l.id = "ap-l" + i;
+          Object.assign(l.style, { left: x1 + "px", top: y1 - 2 + "px", width: Math.hypot(x2 - x1, y2 - y1) + "px", transform: `rotate(${Math.atan2(y2 - y1, x2 - x1)}rad)` });
+          cst.appendChild(l);
+        });
+
+        const tl = gsap.timeline({ paused: true });
+        const T17 = at(17), T18 = at(18), T20 = at(20), T235 = at(23.5), T24 = at(24);
+
+        // A (fb16): APP flips up letter by letter around the baseline; a Bauhaus clock spins beside it.
+        $$("#ap-app .ch").forEach((el, i) => {
+          tl.fromTo(el, { rotationX: -95, transformOrigin: "50% 86%", transformPerspective: 1400 }, { rotationX: 0, duration: 0.38, ease: "back.out(1.7)" }, i * 0.07);
+          tl.fromTo(el, { y: 0 }, { y: -50, duration: 0.14, ease: "power2.out", immediateRender: false }, T17 + i * 0.03);
+          tl.to(el, { y: 0, duration: 0.2, ease: "bounce.out" }, T17 + 0.14 + i * 0.03);
+        });
+        tl.set(".ap-a", { opacity: 1 }, 0);
+        tl.fromTo("#ap-sun", { scale: 0 }, { scale: 1, duration: 0.36, ease: "back.out(1.8)" }, 0.06);
+        tl.fromTo("#ap-wedge", { scale: 0, rotation: -90, transformOrigin: "0% 100%" }, { scale: 1, rotation: 0, duration: 0.4, ease: "back.out(1.6)" }, 0.12);
+        tl.to("#ap-wedge", { rotation: 90, duration: 0.28, ease: "back.out(2)" }, T17 - 0.04);
+        tl.fromTo("#ap-stripes", { clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.3, ease: "expo.out" }, 0.16);
+
+        // B (fb18): ink. SAAS drops in one letter per 8th note and squashes on landing; the constellation draws on the 16ths.
+        tl.set("#ap-ink", { opacity: 1 }, T18);
+        tl.set(["#ap-app", ".ap-a"], { opacity: 0 }, T18);
+        tl.set("#ap-saas", { opacity: 1 }, T18);
+        const lands = [T18 + 0.15, at(18.5), at(19), at(19.5)];
+        $$("#ap-saas .ch").forEach((el, i) => {
+          tl.fromTo(el, { y: -900 }, { y: 0, duration: 0.15, ease: "power3.in" }, lands[i] - 0.15);
+          tl.fromTo(el, { scaleY: 0.66, scaleX: 1.16, transformOrigin: "50% 100%" }, { scaleY: 1, scaleX: 1, duration: 0.42, ease: "elastic.out(1, 0.4)", immediateRender: false }, lands[i]);
+        });
+        dots.forEach((_, i) => tl.fromTo("#ap-d" + i, { scale: 0, opacity: 1 }, { scale: 1, opacity: 1, duration: 0.22, ease: "back.out(2.4)" }, T18 + i * 0.12));
+        links.forEach(([a, b], i) => tl.fromTo("#ap-l" + i, { scaleX: 0, opacity: 1 }, { scaleX: 1, opacity: 1, duration: 0.18, ease: "power2.out" }, T18 + Math.max(a, b) * 0.12 + 0.06));
+
+        // C (fb20): saffron. The Chukta explainer drops in, EXPLAINERS slides in and stretches, the eye follows the beat.
+        tl.set("#ap-saffron", { opacity: 1 }, T20);
+        tl.set(["#ap-saas", "#ap-const"], { opacity: 0 }, T20);
+        tl.set(".ap-c", { opacity: 1 }, T20);
+        tl.fromTo("#ap-card", { y: -540 }, { y: 0, duration: 0.42, ease: "expo.out" }, T20);
+        tl.fromTo("#ap-half", { y: -230 }, { y: 0, duration: 0.36, ease: "back.out(1.6)" }, T20 + 0.06);
+        tl.fromTo("#ap-eye", { scale: 0 }, { scale: 1, duration: 0.34, ease: "back.out(2)" }, T20 + 0.1);
+        [at(21), at(22), at(23)].forEach((b, k) => tl.to("#ap-pupil", { x: [-30, 30, 0][k], y: [10, -10, 0][k], duration: 0.2, ease: "power3.out" }, b - 0.04));
+        tl.set("#ap-explainers", { y: 139 }, 0);
+        $$("#ap-explainers .ch").forEach((el, i) => tl.fromTo(el, { x: 700, opacity: 0 }, { x: 0, opacity: 1, duration: 0.3, ease: "expo.out" }, T20 + i * 0.025));
+        tl.fromTo("#ap-explainers", { scaleY: 1, transformOrigin: "50% 100%" }, { scaleY: 1.72, duration: 0.3, ease: "expo.out", immediateRender: false }, T20 + 0.4);
+
+        // The cobalt full stop lands after EXPLAINERS on the half beat, then floods the frame on sam (fb24).
+        const s = root.getBoundingClientRect().width / 1920 || 1;
+        const dotX = 96 + $("#ap-explainers").getBoundingClientRect().width / s + 14;
+        const lineBottom = 139 + 262, baseline = 139 + 0.864 * 262;
+        const dotY = 540 + lineBottom - (lineBottom - baseline) * 1.72 - 40;
+        tl.set("#ap-dot", { x: dotX, y: dotY, scale: 0 }, 0);
+        tl.fromTo("#ap-dot", { scale: 0 }, { scale: 1, duration: 0.28, ease: "back.out(2.2)", immediateRender: false }, T235 - 0.06);
+        tl.fromTo("#ap-flood", { clipPath: `circle(0px at ${dotX + 20}px ${dotY + 20}px)` },
+          { clipPath: `circle(2400px at ${dotX + 20}px ${dotY + 20}px)`, duration: 0.2, ease: "power3.in" }, T24 - 0.2);
+
+        window.__timelines["apps"] = tl;
+      }
+      document.fonts.load('900 560px "Inter"').then(build, build);
+    })();
+  </script>
+</template>

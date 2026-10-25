@@ -1,0 +1,160 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: var(--color-cobalt);
+    }
+    .wl-group {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+    }
+    .wl-band {
+      position: absolute;
+      left: 0;
+      white-space: nowrap;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 900;
+      font-size: 250px;
+      line-height: 250px;
+      letter-spacing: -0.04em;
+    }
+    .wl-band .ch {
+      display: inline-block;
+    }
+    .wl-top { top: 84px; }
+    .wl-bot { top: 780px; }
+    .wl-label {
+      position: absolute;
+      left: 0;
+      width: 1920px;
+      top: 478px;
+      text-align: center;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 700;
+      font-size: 104px;
+      line-height: 124px;
+      letter-spacing: -0.02em;
+    }
+    #wl-canvas {
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 1080px;
+      display: block;
+    }
+  </style>
+  <div id="root" data-composition-id="wall" data-width="1920" data-height="1080">
+    <div class="wl-group" data-ground="#2B4BFF" data-band="#F4F1EA" data-label="#F4F1EA" data-word="LAUNCH FILMS"><div class="wl-band wl-top" data-layout-ignore></div><div class="wl-band wl-bot" data-layout-ignore></div><div class="wl-label">Launch films</div></div>
+    <div class="wl-group" data-ground="#FF4B3E" data-band="#14161A" data-label="#F4F1EA" data-word="APP EXPLAINERS"><div class="wl-band wl-top" data-layout-ignore></div><div class="wl-band wl-bot" data-layout-ignore></div><div class="wl-label">App explainers</div></div>
+    <div class="wl-group" data-ground="#FFB02E" data-band="#14161A" data-label="#14161A" data-word="3D PRODUCT ADS"><div class="wl-band wl-top" data-layout-ignore></div><div class="wl-band wl-bot" data-layout-ignore></div><div class="wl-label">3D product ads</div></div>
+    <div class="wl-group" data-ground="#14161A" data-band="#FF4B3E" data-label="#F4F1EA" data-word="SOCIAL CUTDOWNS"><div class="wl-band wl-top" data-layout-ignore></div><div class="wl-band wl-bot" data-layout-ignore></div><div class="wl-label">Social cutdowns</div></div>
+    <div class="wl-group" data-ground="#F4F1EA" data-band="#FF4B3E" data-label="#14161A" data-word="LOGO ANIMATION"><div class="wl-band wl-top" data-layout-ignore></div><div class="wl-band wl-bot" data-layout-ignore></div><div class="wl-label">Logo animation</div></div>
+    <canvas id="wl-canvas" width="1920" height="1080" data-motion-blur="off"></canvas>
+  </div>
+  <script>
+    (function () {
+      const START = 1137 / 30, DUR = 5.2667;
+      const at = (fb) => Math.round(fb * 15.79016) / 30 - START;
+      const root = document.querySelector('[data-composition-id="wall"]');
+      const groups = Array.from(root.querySelectorAll(".wl-group"));
+      const SPEED = 700, AMP = 34, LAMBDA = 1150;
+      const clock = { t: 0 };
+      const host = { render: null };
+      window.__hf = window.__hf || {};
+      window.__hf.buildReady = window.__hf.buildReady || {};
+      let ready;
+      window.__hf.buildReady["wall"] = new Promise((r) => (ready = r));
+
+      function build() {
+        const s = root.getBoundingClientRect().width / 1920 || 1;
+        // Fill each band with its service word, then measure every letter's x once.
+        const bands = [];
+        groups.forEach((g, gi) => {
+          g.style.background = g.dataset.ground;
+          g.querySelectorAll(".wl-band").forEach((el) => (el.style.color = g.dataset.band));
+          g.querySelector(".wl-label").style.color = g.dataset.label;
+          g.querySelectorAll(".wl-band").forEach((band, bi) => {
+            const text = (g.dataset.word.replace(/ /g, " ") + "    ").repeat(3);
+            for (const ch of text) {
+              const sp = document.createElement("span");
+              sp.className = "ch";
+              sp.textContent = ch;
+              band.appendChild(sp);
+            }
+            const base = band.getBoundingClientRect().left;
+            const letters = Array.from(band.children).map((sp) => {
+              const r = sp.getBoundingClientRect();
+              return { el: sp, cx: (r.left - base + r.width / 2) / s };
+            });
+            bands.push({ gi, band, letters, dir: bi === 0 ? -1 : 1, phase: bi === 0 ? 0 : Math.PI });
+          });
+        });
+
+        const starts = [0, at(74), at(76), at(78), at(80)];
+        const draw = (t) => {
+          bands.forEach((b) => {
+            const lt = Math.max(0, t - starts[b.gi]);
+            const off = b.dir < 0 ? -lt * SPEED : -900 + lt * SPEED; // top runs left, bottom runs right
+            b.band.style.transform = `translateX(${off.toFixed(1)}px)`;
+            b.letters.forEach((L) => {
+              const x = L.cx + off;
+              const ang = (2 * Math.PI * x) / LAMBDA + b.phase + t * 2.2;
+              const y = AMP * Math.sin(ang);
+              const rot = Math.atan((AMP * 2 * Math.PI / LAMBDA) * Math.cos(ang)) * 57.3 * 0.5;
+              L.el.style.transform = `translateY(${y.toFixed(1)}px) rotate(${rot.toFixed(2)}deg)`;
+            });
+          });
+          if (host.render) host.render(t);
+        };
+
+        const tl = gsap.timeline({ paused: true });
+        tl.to(clock, { t: DUR, duration: DUR, ease: "none", onUpdate: () => draw(clock.t) });
+        // Hard cuts on every second beat: ground, bands and label change together.
+        groups.forEach((g, k) => {
+          tl.set(g, { opacity: 1 }, starts[k]);
+          if (k < groups.length - 1) tl.set(g, { opacity: 0 }, starts[k + 1]);
+        });
+        draw(0);
+
+        // A 3D object pops beside the label on every beat, alternating sides.
+        import("./assets/js/kit.js").then(async (K) => {
+          const { THREE, scene, render } = await K.stage(document.getElementById("wl-canvas"), { z: 12 });
+          const { spring, clamp01, easeIn3 } = K;
+          const spec = [["ring", K.C.saffron], ["sphere", K.C.coral], ["cone", K.C.saffron], ["half", K.C.bone], ["quarter", K.C.coral],
+            ["capsule", K.C.ink], ["arch", K.C.bone], ["stack", K.C.saffron, K.C.coral], ["eye", K.C.coral, K.C.ink], ["cube", K.C.saffron]];
+          const objs = spec.map(([k, col, acc], i) => {
+            const o = K.shape(THREE, k, col, acc || K.C.bone);
+            o.visible = false;
+            scene.add(o);
+            return { o, T: at(72 + i), side: i % 2 ? 1 : -1 };
+          });
+          host.render = (t) => {
+            objs.forEach((B, i) => {
+              const u = t - B.T;
+              const vis = u >= 0 && u < 1.0;
+              B.o.visible = vis;
+              if (!vis) return;
+              const grow = spring(clamp01(u / 0.32));
+              const out = easeIn3((u - 0.84) / 0.16);
+              B.o.scale.setScalar(Math.max(0.001, 1.3 * grow * (1 - out)));
+              B.o.position.set(B.side * 3.75, 0.05 + 0.25 * Math.sin(u * 4), 0.5);
+              B.o.rotation.set(0.5 + u * 1.6, u * 3.2 + i, 0.2 * Math.sin(u * 5));
+            });
+            render();
+          };
+          draw(clock.t);
+          window.__timelines["wall"] = tl; // registered once the 3D is built
+          ready();
+        }).catch((err) => {
+          console.error("[wall] 3D build failed", err);
+          window.__timelines["wall"] = tl;
+          ready();
+        });
+      }
+      document.fonts.load('900 250px "Inter"').then(build, build);
+    })();
+  </script>
+</template>

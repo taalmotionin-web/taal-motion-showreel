@@ -1,0 +1,125 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: var(--color-cobalt);
+    }
+    #td-canvas {
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 1080px;
+      display: block;
+    }
+  </style>
+  <div id="root" data-composition-id="threed" data-width="1920" data-height="1080" data-motion-blur="off">
+    <canvas id="td-canvas" width="1920" height="1080"></canvas>
+  </div>
+  <script>
+    (function () {
+      const START = 379 / 30, DUR = 4.2;
+      const at = (fb) => Math.round(fb * 15.79016) / 30 - START;
+      const clock = { t: 0 };
+      const host = { render: null };
+      window.__hf = window.__hf || {};
+      window.__hf.buildReady = window.__hf.buildReady || {};
+      let ready;
+      window.__hf.buildReady["threed"] = new Promise((r) => (ready = r));
+      const tl = gsap.timeline({ paused: true });
+      tl.to(clock, { t: DUR, duration: DUR, ease: "none", onUpdate: () => host.render && host.render(clock.t) });
+
+      import("./assets/js/kit.js").then(async (K) => {
+        const { THREE, scene, camera, render } = await K.stage(document.getElementById("td-canvas"), { bg: K.C.cobalt, z: 12 });
+        const { clamp01, easeOut3, easeIn3, easeInOut, spring, hump, lerp } = K;
+        const BLUE = new THREE.Color(K.C.cobalt), INK = new THREE.Color(K.C.ink);
+
+        // "3D" (coral sides) and "ADS" (saffron sides), one line centred on the frame.
+        const SIZE = 1.8 / 0.7275;
+        const t3 = K.text3d(THREE, "3D", { size: SIZE, depth: 0.7, side: K.C.coral });
+        const tA = K.text3d(THREE, "ADS", { size: SIZE, depth: 0.7, side: K.C.saffron });
+        const GAP = 0.95, W = t3.width + GAP + tA.width;
+        const g3 = new THREE.Group(), gA = new THREE.Group();
+        // pivot "3D" on its own centre so it can spin in place
+        t3.group.position.set(-t3.width / 2, -t3.cap / 2, 0);
+        g3.add(t3.group);
+        g3.position.set(-W / 2 + t3.width / 2, 0, 0);
+        tA.group.position.set(-W / 2 + t3.width + GAP, -tA.cap / 2, 0);
+        gA.add(tA.group);
+        scene.add(g3, gA);
+
+        // The burst: eight Bauhaus objects that fly out of the type and orbit it.
+        const kinds = [["quarter", K.C.coral], ["ring", K.C.saffron], ["sphere", K.C.bone], ["cone", K.C.coral], ["half", K.C.saffron], ["capsule", K.C.bone], ["arch", K.C.coral], ["stack", K.C.saffron]];
+        const objs = kinds.map(([k, col], i) => {
+          const o = K.shape(THREE, k, col, K.C.bone);
+          o.visible = false;
+          scene.add(o);
+          return { o, a0: (i / kinds.length) * Math.PI * 2 + 0.35, z: [-1.6, 0.8, -0.6, 1.2, -1.2, 0.5, -0.2, 1.0][i], s: [1.05, 0.95, 0.9, 1.0, 1.1, 0.9, 1.0, 0.95][i], spin: 0.7 + 0.13 * i };
+        });
+
+        const T0 = 0.55, T26 = at(26), T265 = at(26.5), T27 = at(27), T275 = at(27.5), T28 = at(28), T315 = at(31.5);
+        const beats = [at(29), at(30), at(31)];
+        const drops = [T26, T265, T27];
+        host.render = (t) => {
+          scene.background = t < T28 ? BLUE : INK;
+          const fly = easeIn3((t - T315) / (DUR - T315)); // everything rushes past the camera at the end
+
+          // "3D": flies in spinning, sways, tumbles once on fb27.5, then turns with the beat.
+          const inP = easeOut3(t / T0);
+          let ry, rx = 0, y = 0;
+          if (t < T0) ry = lerp(Math.PI * 2.4, 0.35, inP);
+          else if (t < T275) ry = 0.05 + 0.3 * Math.cos(Math.PI * (t - T0) / (T275 - T0));
+          else ry = -0.25 + 0.42 * Math.sin((t - T275) * 2.4);
+          if (t >= T275 && t < T28) {
+            const p = easeInOut((t - T275) / (T28 - T275));
+            rx = Math.PI * 2 * p;
+            y = 0.6 * Math.sin(Math.PI * p);
+          }
+          const pulse = beats.reduce((a, b) => a + hump((t - b) / 0.3) * 0.07, 0);
+          g3.rotation.set(rx + lerp(0.5, 0, inP), ry, 0);
+          g3.scale.setScalar(lerp(0.35, 1, inP) * (1 + pulse));
+          g3.position.set(-W / 2 + t3.width / 2, y, lerp(-34, 0, inP) + fly * 11);
+
+          // "ADS": the letters drop in one per 8th note and squash on landing, then hop on the beats.
+          tA.letters.forEach((L, i) => {
+            const Ti = drops[i];
+            const fall = easeIn3((t - (Ti - 0.22)) / 0.22);
+            const sq = hump((t - Ti) / 0.32);
+            const hop = beats.reduce((a, b) => a + hump((t - b - i * 0.05) / 0.28) * 0.35, 0);
+            L.holder.visible = t >= Ti - 0.22;
+            L.holder.position.y = L.y + (1 - fall) * 5.5 + hop - sq * 0.12 * L.h;
+            L.holder.scale.set(1 + sq * 0.22, 1 - sq * 0.3, 1);
+            L.holder.rotation.z = Math.sin(clamp01((t - Ti) / 0.5) * Math.PI * 2) * 0.08 * (1 - clamp01((t - Ti) / 0.5));
+          });
+          gA.position.z = fly * 11;
+          gA.rotation.y = 0.12 * Math.sin(t * 1.7);
+
+          // Burst on fb28, orbit, pop on each beat, and scatter at the end.
+          objs.forEach((B, i) => {
+            const tb = t - T28 - i * 0.033;
+            B.o.visible = tb >= 0;
+            if (tb < 0) return;
+            const p = easeOut3(tb / 0.42);
+            const a = B.a0 + tb * 0.32;
+            const ox = Math.cos(a) * 6.3, oy = Math.sin(a) * 3.0;
+            const pop = beats.reduce((acc, b) => acc + hump((t - b - i * 0.02) / 0.26) * 0.2, 0);
+            const s = B.s * spring(tb / 0.45) * (1 + pop) * (1 + fly * 0.6);
+            B.o.position.set(lerp(0, ox, p) * (1 + fly * 0.8), lerp(0, oy, p) * (1 + fly * 0.8), lerp(-2, B.z, p) + fly * 9);
+            B.o.scale.setScalar(Math.max(0.001, s));
+            B.o.rotation.set(tb * B.spin * 0.8 + i, tb * B.spin + i * 0.7, 0.3 * Math.sin(tb + i));
+          });
+          camera.position.z = 12 - 1.2 * easeInOut((t - beats[1]) / (T315 - beats[1]));
+          render();
+        };
+        host.render(clock.t);
+        window.__timelines["threed"] = tl; // registered once the 3D is built
+        ready();
+      }).catch((err) => {
+        console.error("[threed] 3D build failed", err);
+        window.__timelines["threed"] = tl;
+        ready();
+      });
+    })();
+  </script>
+</template>

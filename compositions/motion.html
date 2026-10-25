@@ -1,0 +1,200 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: var(--color-cobalt);
+    }
+    .mo-ground { position: absolute; inset: 0; opacity: 0; }
+    #mo-bone { background: var(--color-bone); }
+    #mo-ink { background: var(--color-ink); }
+    .mo-word {
+      position: absolute;
+      left: 96px;
+      white-space: nowrap;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 900;
+      letter-spacing: -0.045em;
+      opacity: 0;
+    }
+    .mo-word .ch { display: inline-block; }
+    #mo-motion { top: 345.8px; height: 410px; overflow: hidden; font-size: 410px; line-height: 410px; color: var(--color-bone); opacity: 1; }
+    #mo-cutto { top: 605.8px; font-size: 410px; line-height: 410px; color: var(--color-ink); }
+    #mo-the, #mo-beat { font-size: 430px; line-height: 430px; color: var(--color-bone); }
+    #mo-the { top: 98.5px; }
+    #mo-beat { top: 528.5px; }
+    .mo-band { position: absolute; left: 0; top: 395px; }
+    #mb1 { width: 660px; height: 330px; border-radius: 330px 330px 0 0; background: #ff4b3e; }
+    #mb2 { width: 330px; height: 330px; border-radius: 50%; background: #ffb02e; }
+    #mb3 { width: 620px; height: 330px; background: repeating-linear-gradient(to bottom, #f4f1ea 0 26px, transparent 26px 52px); }
+    #mb4 { width: 330px; height: 330px; border-radius: 50%; background: #14161a; }
+    #mb4 .w { position: absolute; left: 55px; top: 55px; width: 220px; height: 220px; border-radius: 50%; background: #f4f1ea; }
+    #mb4 .p { position: absolute; left: 125px; top: 125px; width: 80px; height: 80px; border-radius: 50%; background: #14161a; }
+    .mo-tile { position: absolute; width: 640px; height: 360px; overflow: hidden; opacity: 0; }
+    #mt1 { left: 96px; top: 150px; background: #ff4b3e; }
+    #mt2 { left: 1184px; top: 118px; background: #14161a; }
+    #mt3 { left: 640px; top: 196px; background: #ffb02e; }
+    .ti { position: absolute; }
+    #mo-panel { position: absolute; left: 1340px; top: 135px; width: 456px; height: 810px; }
+    .mo-dot { position: absolute; border-radius: 50%; opacity: 0; }
+    .mo-line { position: absolute; height: 5px; background: #f4f1ea; transform-origin: 0% 50%; opacity: 0; }
+    #mo-grid { position: absolute; left: 273px; top: 201px; width: 1374px; height: 678px; }
+    .gc { position: absolute; width: 330px; height: 330px; overflow: hidden; opacity: 0; }
+    .gs { position: absolute; }
+  </style>
+  <div id="root" data-composition-id="motion" data-width="1920" data-height="1080">
+    <div class="mo-ground" id="mo-bone"></div>
+    <div class="mo-ground" id="mo-ink"></div>
+
+    <!-- Bar 1: Bauhaus shapes whip behind MOTION on the off-beats. -->
+    <div class="mo-band" id="mb1"></div>
+    <div class="mo-band" id="mb2"></div>
+    <div class="mo-band" id="mb3"></div>
+    <div class="mo-band" id="mb4"><div class="w"></div><div class="p"></div></div>
+    <div class="mo-word" id="mo-motion"><span class="ch">M</span><span class="ch">O</span><span class="ch">T</span><span class="ch">I</span><span class="ch">O</span><span class="ch">N</span></div>
+
+    <!-- Bar 2: CUT TO, and a tile that cuts to a new place and a new design on every beat. -->
+    <div class="mo-tile" id="mt1">
+      <div class="ti" id="mt1a" style="left:0;top:60px;width:300px;height:300px;border-top-right-radius:300px;background:#ffb02e"></div>
+      <div class="ti" style="left:470px;top:90px;width:70px;height:70px;border-radius:50%;background:#14161a"></div>
+    </div>
+    <div class="mo-tile" id="mt2">
+      <div class="ti" id="mt2a" style="left:120px;top:160px;width:400px;height:200px;border-radius:200px 200px 0 0;background:#f4f1ea"></div>
+      <div class="ti" style="left:60px;top:40px;width:90px;height:90px;border-radius:50%;background:#ff4b3e"></div>
+    </div>
+    <div class="mo-tile" id="mt3">
+      <div class="ti" id="mt3a" style="left:0;top:0;width:640px;height:130px;background:repeating-linear-gradient(to bottom,#14161a 0 16px,transparent 16px 32px)"></div>
+      <div class="ti" id="mt3b" style="left:300px;top:210px;width:300px;height:150px;border-radius:150px 150px 0 0;background:#ff4b3e"></div>
+    </div>
+    <div class="mo-word" id="mo-cutto">CUT TO</div>
+
+    <!-- Bar 3: THE BEAT, with a constellation that adds a dot and a line on every beat. -->
+    <div id="mo-panel" data-layout-ignore></div>
+    <div class="mo-word" id="mo-the">THE</div>
+    <div class="mo-word" id="mo-beat">BEAT</div>
+
+    <!-- Bar 4: eight Bauhaus tiles fill on the 8th notes and spin on the beats. -->
+    <div id="mo-grid" data-layout-ignore>
+      <div class="gc" style="left:0;top:0;background:#2b4bff"><div class="gs" style="left:105px;top:105px;width:120px;height:120px;border-radius:50%;background:#f4f1ea"></div></div>
+      <div class="gc" style="left:348px;top:0;background:#ff4b3e"><div class="gs" style="left:0;top:0;width:330px;height:330px;border-top-right-radius:330px;background:#ffb02e;transform-origin:50% 50%"></div></div>
+      <div class="gc" style="left:696px;top:0;background:#f4f1ea"><div class="gs" style="left:0;top:165px;width:330px;height:165px;border-radius:165px 165px 0 0;background:#14161a"></div></div>
+      <div class="gc" style="left:1044px;top:0;background:#ffb02e"><div class="gs" style="left:65px;top:65px;width:200px;height:200px;border-radius:50%;background:#14161a"><div style="position:absolute;left:36px;top:36px;width:128px;height:128px;border-radius:50%;background:#f4f1ea"></div><div style="position:absolute;left:72px;top:72px;width:56px;height:56px;border-radius:50%;background:#14161a"></div></div></div>
+      <div class="gc" style="left:0;top:348px;background:#14161a"><div class="gs" style="left:0;top:0;width:330px;height:330px;background:repeating-linear-gradient(to bottom,#f4f1ea 0 18px,transparent 18px 36px)"></div></div>
+      <div class="gc" style="left:348px;top:348px;background:#f4f1ea"><div class="gs" style="left:50px;top:50px;width:230px;height:230px;border-radius:50%;background:#ff4b3e"></div></div>
+      <div class="gc" style="left:696px;top:348px;background:#ff4b3e"><div class="gs" style="left:165px;top:0;width:165px;height:330px;border-radius:0 165px 165px 0;background:#f4f1ea"></div></div>
+      <div class="gc" style="left:1044px;top:348px;background:#ffb02e"><div class="gs" style="left:0;top:0;width:330px;height:330px;border-bottom-left-radius:330px;background:#ff4b3e"></div></div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const START = 884 / 30;
+      const at = (fb) => Math.round(fb * 15.79016) / 30 - START;
+      const root = document.querySelector('[data-composition-id="motion"]');
+      const $ = (s) => root.querySelector(s);
+      const $$ = (s) => Array.from(root.querySelectorAll(s));
+
+      function kern(line, px) {
+        const c = document.createElement("canvas").getContext("2d");
+        c.font = `900 ${px}px "Inter"`;
+        const chs = Array.from(line.querySelectorAll(".ch"));
+        chs.forEach((el, i) => {
+          if (i === chs.length - 1) return;
+          const a = el.textContent, b = chs[i + 1].textContent;
+          el.style.marginRight = (c.measureText(a + b).width - c.measureText(a).width - c.measureText(b).width).toFixed(2) + "px";
+        });
+      }
+
+      function build() {
+        kern($("#mo-motion"), 410);
+        // Constellation: two dots and a line per beat.
+        const dots = [[90, 120, 34, "#ff4b3e"], [330, 210, 18, "#f4f1ea"], [180, 380, 46, "#ffb02e"], [380, 470, 22, "#ff4b3e"],
+          [110, 600, 20, "#f4f1ea"], [300, 650, 40, "#ffb02e"], [140, 760, 16, "#ff4b3e"], [390, 760, 28, "#f4f1ea"]];
+        const panel = $("#mo-panel");
+        dots.forEach(([x, y, r, col], i) => {
+          const d = document.createElement("div");
+          d.className = "mo-dot";
+          d.id = "mo-d" + i;
+          Object.assign(d.style, { left: x - r + "px", top: y - r + "px", width: 2 * r + "px", height: 2 * r + "px", background: col });
+          panel.appendChild(d);
+          if (i % 2 === 1) {
+            const [x1, y1] = dots[i - 1];
+            const l = document.createElement("div");
+            l.className = "mo-line";
+            l.id = "mo-l" + i;
+            Object.assign(l.style, { left: x1 + "px", top: y1 - 2.5 + "px", width: Math.hypot(x - x1, y - y1) + "px", transform: `rotate(${Math.atan2(y - y1, x - x1)}rad)` });
+            panel.insertBefore(l, panel.firstChild);
+          }
+          if (i > 1 && i % 2 === 0) {
+            const [x1, y1] = dots[i - 1];
+            const l = document.createElement("div");
+            l.className = "mo-line";
+            l.id = "mo-k" + i;
+            Object.assign(l.style, { left: x1 + "px", top: y1 - 2.5 + "px", width: Math.hypot(x - x1, y - y1) + "px", transform: `rotate(${Math.atan2(y - y1, x - x1)}rad)` });
+            panel.insertBefore(l, panel.firstChild);
+          }
+        });
+
+        const tl = gsap.timeline({ paused: true });
+        const T60 = at(60), T61 = at(61), T62 = at(62), T63 = at(63), T64 = at(64), T68 = at(68);
+
+        // Bar 1 (sam, cobalt): MOTION rolls up; a shape whips behind it on each off-beat.
+        $$("#mo-motion .ch").forEach((el, i) => tl.fromTo(el, { yPercent: 118 }, { yPercent: 0, duration: 0.12, ease: "power3.out" }, i * 0.03));
+        $$("#mo-motion .ch").forEach((el, i) => {
+          tl.fromTo(el, { y: 0 }, { y: -34, duration: 0.12, ease: "power2.out", immediateRender: false }, at(58) + i * 0.025);
+          tl.to(el, { y: 0, duration: 0.22, ease: "bounce.out" }, at(58) + 0.12 + i * 0.025);
+        });
+        ["#mb1", "#mb2", "#mb3", "#mb4"].forEach((id, i) => {
+          const t = Math.max(0, at(56.5 + i) - 0.52);
+          tl.fromTo(id, { x: 1940, rotation: 0 }, { x: -720, rotation: i % 2 ? -40 : 40, duration: 1.05, ease: "none" }, t);
+        });
+        tl.set(["#mo-motion", ".mo-band"], { opacity: 0 }, T60);
+
+        // Bar 2 (bone): CUT TO cuts in; one tile jumps to a new place and a new design each beat.
+        tl.set("#mo-bone", { opacity: 1 }, T60);
+        tl.set("#mo-cutto", { opacity: 1 }, T60);
+        tl.set("#mt1", { opacity: 1 }, T61);
+        tl.fromTo("#mt1a", { rotation: -90, transformOrigin: "0% 100%" }, { rotation: 0, duration: 0.3, ease: "back.out(1.8)", immediateRender: false }, T61);
+        tl.set("#mt1", { opacity: 0 }, T62);
+        tl.set("#mt2", { opacity: 1 }, T62);
+        tl.fromTo("#mt2a", { y: 220 }, { y: 0, duration: 0.3, ease: "back.out(1.8)", immediateRender: false }, T62);
+        tl.set("#mt2", { opacity: 0 }, T63);
+        tl.set("#mt3", { opacity: 1 }, T63);
+        tl.fromTo("#mt3a", { backgroundPositionY: "0px" }, { backgroundPositionY: "64px", duration: 0.4, ease: "power2.out", immediateRender: false }, T63);
+        tl.fromTo("#mt3b", { y: 160 }, { y: 0, duration: 0.3, ease: "back.out(2)", immediateRender: false }, T63 + 0.04);
+        tl.set(["#mt3", "#mo-cutto"], { opacity: 0 }, T64);
+
+        // Bar 3 (ink): THE, then BEAT on the half beat; the constellation grows on each beat.
+        tl.set("#mo-ink", { opacity: 1 }, T64);
+        tl.fromTo("#mo-the", { opacity: 0, scale: 1.3, filter: "blur(8px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.16, ease: "expo.out" }, T64);
+        tl.fromTo("#mo-beat", { opacity: 0, x: -220 }, { opacity: 1, x: 0, duration: 0.2, ease: "expo.out" }, at(64.5));
+        [64, 65, 66, 67].forEach((fb, k) => {
+          const b = at(fb);
+          [2 * k, 2 * k + 1].forEach((i, j) => tl.fromTo("#mo-d" + i, { scale: 0, opacity: 1 }, { scale: 1, opacity: 1, duration: 0.26, ease: "back.out(2.6)" }, b + j * 0.13));
+          tl.fromTo("#mo-l" + (2 * k + 1), { scaleX: 0, opacity: 1 }, { scaleX: 1, opacity: 1, duration: 0.18, ease: "power2.out" }, b + 0.16);
+          if (k > 0) tl.fromTo("#mo-k" + 2 * k, { scaleX: 0, opacity: 1 }, { scaleX: 1, opacity: 1, duration: 0.16, ease: "power2.out" }, b);
+        });
+        tl.set(["#mo-the", "#mo-beat", "#mo-panel"], { opacity: 0 }, T68);
+
+        // Bar 4: the grid fills on the 8th notes, then every tile's shape turns on the beat.
+        const cells = $$(".gc");
+        cells.forEach((el, i) => {
+          const t = at(68 + i * 0.5);
+          tl.fromTo(el, { opacity: 0, scale: 0.78 }, { opacity: 1, scale: 1, duration: 0.14, ease: "expo.out" }, t);
+          tl.fromTo(el.firstElementChild, { rotation: -90, scale: 0.6, transformOrigin: "50% 50%" }, { rotation: 0, scale: 1, duration: 0.32, ease: "back.out(1.8)" }, t);
+        });
+        cells.forEach((el, i) => {
+          let n = 0;
+          [69, 70, 71].forEach((fb) => {
+            if (68 + i * 0.5 >= fb) return;
+            n += 1;
+            tl.to(el.firstElementChild, { rotation: 90 * n, duration: 0.26, ease: "back.out(2)" }, at(fb) - 0.03);
+          });
+        });
+
+        window.__timelines["motion"] = tl;
+      }
+      document.fonts.load('900 410px "Inter"').then(build, build);
+    })();
+  </script>
+</template>

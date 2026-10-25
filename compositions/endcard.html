@@ -1,0 +1,90 @@
+<template>
+  <style>
+    @font-face {
+      font-family: "Inter Tight";
+      font-weight: 500;
+      src: url("assets/fonts/InterTight-Medium.ttf");
+    }
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: var(--color-bone);
+    }
+    #ec-mark {
+      position: absolute;
+      left: 660px;
+      top: 240px;
+      width: 600px;
+      height: 600px;
+    }
+    #ec-word {
+      position: absolute;
+      left: 0;
+      top: 0;
+      white-space: nowrap;
+      font-family: "Inter Tight", sans-serif;
+      font-weight: 500;
+      font-size: 123px;
+      line-height: 123px;
+      letter-spacing: -0.0345em;
+      color: var(--color-ink);
+    }
+    #ec-url {
+      position: absolute;
+      left: 0;
+      width: 1920px;
+      top: 654px;
+      text-align: center;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 400;
+      font-size: 38px;
+      line-height: 46px;
+      color: var(--color-ink);
+    }
+    #ec-note {
+      position: absolute;
+      left: 0;
+      width: 1920px;
+      top: 912px;
+      text-align: center;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 400;
+      font-size: 28px;
+      line-height: 34px;
+      color: var(--color-muted);
+    }
+  </style>
+  <div id="root" data-composition-id="endcard" data-width="1920" data-height="1080">
+    <svg id="ec-mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M69.28 22.00A34.0 34.0 0 0 1 81.74 62.19" fill="none" stroke="#14161A" stroke-width="6.0" stroke-linecap="round"/><path d="M73.49 74.58A34.0 34.0 0 0 1 31.60 78.59" fill="none" stroke="#14161A" stroke-width="9.0" stroke-linecap="round"/><path d="M19.57 65.17A34.0 34.0 0 0 1 28.13 23.96" fill="none" stroke="#14161A" stroke-width="12.5" stroke-linecap="round"/><circle cx="50.00" cy="16.00" r="10.0" fill="#2B4BFF"/></svg>
+    <div id="ec-word">Taal Motion</div>
+    <div id="ec-url">taalmotion.netlify.app</div>
+    <div id="ec-note">All pieces shown are Taal Motion concept and studio work.</div>
+  </div>
+  <script>
+    (function () {
+      const root = document.querySelector('[data-composition-id="endcard"]');
+      const $ = (s) => root.querySelector(s);
+      function build() {
+        // Lockup proportions from brand/logo/taal-lockup-ink.svg: mark 100 units, text at x 118, baseline 68.
+        const M = 212, U = M / 100;
+        const s = root.getBoundingClientRect().width / 1920 || 1;
+        const wordW = $("#ec-word").getBoundingClientRect().width / s;
+        const total = 118 * U + wordW;
+        const left = (1920 - total) / 2, top = 392;
+        $("#ec-word").style.left = left + 118 * U + "px";
+        $("#ec-word").style.top = top + 68 * U - 0.864 * 123 + "px";
+
+        const tl = gsap.timeline({ paused: true });
+        // The mark lands big on the stab, holds a beat, then settles into the lockup as the wordmark wipes in.
+        tl.fromTo("#ec-mark", { x: 0, y: 0, scale: 1, transformOrigin: "0% 0%" },
+          { x: left - 660, y: top - 240, scale: M / 600, duration: 0.44, ease: "expo.inOut" }, 0.2);
+        tl.fromTo("#ec-word", { clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.32, ease: "expo.out" }, 0.5);
+        tl.fromTo("#ec-url", { opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.16, ease: "power2.out" }, 0.8);
+        tl.fromTo("#ec-note", { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "power1.out" }, 0.98);
+        window.__timelines["endcard"] = tl;
+      }
+      document.fonts.load('500 123px "Inter Tight"').then(build, build);
+    })();
+  </script>
+</template>

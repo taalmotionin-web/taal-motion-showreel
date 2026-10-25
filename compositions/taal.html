@@ -1,0 +1,197 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: var(--color-bone);
+    }
+    .tl-ground {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+    }
+    #tl-saffron { background: #ffb02e; }
+    #tl-coral { background: #ff4b3e; clip-path: circle(1400px at 960px 336px); }
+    .tl-word {
+      position: absolute;
+      white-space: nowrap;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 900;
+      letter-spacing: -0.045em;
+      opacity: 0;
+    }
+    .tl-word .ch { display: inline-block; }
+    #tl-w1 { top: 453.1px; font-size: 170px; line-height: 170px; color: var(--color-ink); }
+    #tl-w2 { top: 394.9px; font-size: 330px; line-height: 330px; color: var(--color-ink); }
+    #tl-w3 { top: 276.2px; font-size: 560px; line-height: 560px; color: var(--color-bone); }
+    .tl-x { position: absolute; opacity: 0; }
+    .tl-dot { width: 46px; height: 46px; border-radius: 50%; background: #ffb02e; left: 937px; top: 517px; }
+    #tl-dome { left: 780px; top: 900px; width: 360px; height: 180px; border-radius: 180px 180px 0 0; background: #ff4b3e; }
+    #tl-stripes { left: 0; top: 410px; width: 1920px; height: 260px; background: repeating-linear-gradient(to bottom, #ff4b3e 0 22px, transparent 22px 44px); }
+    #tl-q1 { left: 0; top: 0; width: 280px; height: 280px; border-bottom-right-radius: 280px; background: var(--color-ink); }
+    #tl-q2 { left: 1640px; top: 800px; width: 280px; height: 280px; border-top-left-radius: 280px; background: var(--color-ink); }
+    .tl-burst { left: 900px; top: 480px; width: 120px; height: 120px; }
+    #tl-canvas { position: absolute; inset: 0; width: 1920px; height: 1080px; display: block; }
+    #tl-flat { position: absolute; left: 660px; top: 240px; width: 600px; height: 600px; opacity: 0; }
+  </style>
+  <div id="root" data-composition-id="taal" data-width="1920" data-height="1080">
+    <div class="tl-ground" id="tl-saffron"></div>
+    <div class="tl-ground" id="tl-coral"></div>
+    <!-- extras for hit 1 -->
+    <div class="tl-x tl-dot" id="tl-d1"></div><div class="tl-x tl-dot" id="tl-d2"></div><div class="tl-x tl-dot" id="tl-d3"></div><div class="tl-x tl-dot" id="tl-d4"></div>
+    <div class="tl-x" id="tl-dome"></div>
+    <!-- extras for hit 2 -->
+    <div class="tl-x" id="tl-stripes"></div>
+    <div class="tl-x" id="tl-q1"></div>
+    <div class="tl-x" id="tl-q2"></div>
+    <!-- extras for hit 3: shapes burst out from behind the word -->
+    <div class="tl-x tl-burst" id="tl-b1" style="border-radius:50%;background:#ffb02e"></div>
+    <div class="tl-x tl-burst" id="tl-b2" style="height:60px;top:510px;border-radius:60px 60px 0 0;background:#f4f1ea"></div>
+    <div class="tl-x tl-burst" id="tl-b3" style="border-top-left-radius:120px;background:#14161a"></div>
+    <div class="tl-x tl-burst" id="tl-b4" style="border-radius:50%;border:22px solid #ffb02e;box-sizing:border-box"></div>
+    <div class="tl-x tl-burst" id="tl-b5" style="border-radius:50%;background:#f4f1ea;width:80px;height:80px;left:920px;top:500px"></div>
+    <div class="tl-x tl-burst" id="tl-b6" style="height:60px;top:510px;border-radius:0 0 60px 60px;background:#14161a"></div>
+    <div class="tl-x tl-burst" id="tl-b7" style="border-bottom-right-radius:120px;background:#ffb02e"></div>
+    <div class="tl-x tl-burst" id="tl-b8" style="background:repeating-linear-gradient(to bottom,#f4f1ea 0 14px,transparent 14px 28px)"></div>
+    <div class="tl-word" id="tl-w1"><span class="ch">T</span><span class="ch">A</span><span class="ch">A</span><span class="ch">L</span></div>
+    <div class="tl-word" id="tl-w2"><span class="ch">T</span><span class="ch">A</span><span class="ch">A</span><span class="ch">L</span></div>
+    <div class="tl-word" id="tl-w3"><span class="ch">T</span><span class="ch">A</span><span class="ch">A</span><span class="ch">L</span></div>
+    <canvas id="tl-canvas" width="1920" height="1080" data-motion-blur="off"></canvas>
+    <!-- The flat mark takes over from the 3D one in the last frames, identical to the end card. -->
+    <svg id="tl-flat" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M69.28 22.00A34.0 34.0 0 0 1 81.74 62.19" fill="none" stroke="#14161A" stroke-width="6.0" stroke-linecap="round"/><path d="M73.49 74.58A34.0 34.0 0 0 1 31.60 78.59" fill="none" stroke="#14161A" stroke-width="9.0" stroke-linecap="round"/><path d="M19.57 65.17A34.0 34.0 0 0 1 28.13 23.96" fill="none" stroke="#14161A" stroke-width="12.5" stroke-linecap="round"/><circle cx="50.00" cy="16.00" r="10.0" fill="#2B4BFF"/></svg>
+  </div>
+  <script>
+    (function () {
+      const START = 1295 / 30, DUR = 1.8333;
+      const at = (fb) => Math.round(fb * 15.79016) / 30 - START;
+      const root = document.querySelector('[data-composition-id="taal"]');
+      const $ = (s) => root.querySelector(s);
+      const $$ = (s) => Array.from(root.querySelectorAll(s));
+      const clock = { t: 0 };
+      const host = { render: null };
+      window.__hf = window.__hf || {};
+      window.__hf.buildReady = window.__hf.buildReady || {};
+      let ready;
+      window.__hf.buildReady["taal"] = new Promise((r) => (ready = r));
+
+      function kern(line, px) {
+        const c = document.createElement("canvas").getContext("2d");
+        c.font = `900 ${px}px "Inter"`;
+        const chs = Array.from(line.querySelectorAll(".ch"));
+        chs.forEach((el, i) => {
+          if (i === chs.length - 1) return;
+          const a = el.textContent, b = chs[i + 1].textContent;
+          el.style.marginRight = (c.measureText(a + b).width - c.measureText(a).width - c.measureText(b).width).toFixed(2) + "px";
+        });
+      }
+
+      function build() {
+        [["#tl-w1", 170], ["#tl-w2", 330], ["#tl-w3", 560]].forEach(([sel, px]) => kern($(sel), px));
+        const s = root.getBoundingClientRect().width / 1920 || 1;
+        ["#tl-w1", "#tl-w2", "#tl-w3"].forEach((sel) => {
+          const w = $(sel).getBoundingClientRect().width / s;
+          $(sel).style.left = (1920 - w) / 2 + "px";
+        });
+
+        const tl = gsap.timeline({ paused: true });
+        tl.to(clock, { t: DUR, duration: DUR, ease: "none", onUpdate: () => host.render && host.render(clock.t) });
+        const T83 = at(83), T84 = at(84);
+
+        // Hit 1 (fb82): a small TAAL pops; saffron dots spring out around it and a coral dome rises under it.
+        tl.set("#tl-w1", { opacity: 1 }, 0);
+        $$("#tl-w1 .ch").forEach((el, i) => tl.fromTo(el, { scale: 0, y: 40 }, { scale: 1, y: 0, duration: 0.32, ease: "back.out(2.6)" }, i * 0.035));
+        [[-330, -120], [330, -110], [-300, 120], [310, 130]].forEach(([dx, dy], i) => {
+          tl.set("#tl-d" + (i + 1), { opacity: 1 }, 0.04);
+          tl.fromTo("#tl-d" + (i + 1), { x: 0, y: 0, scale: 0 }, { x: dx, y: dy, scale: 1, duration: 0.34, ease: "back.out(2)" }, 0.04 + i * 0.03);
+        });
+        tl.set("#tl-dome", { opacity: 1 }, 0.06);
+        tl.fromTo("#tl-dome", { y: 200 }, { y: 0, duration: 0.3, ease: "back.out(1.8)" }, 0.06);
+
+        // Hit 2 (fb83): saffron ground, a bigger TAAL slams up; coral stripes sweep behind it, ink quarters swing in.
+        tl.set(["#tl-w1", "#tl-d1", "#tl-d2", "#tl-d3", "#tl-d4", "#tl-dome"], { opacity: 0 }, T83);
+        tl.set(["#tl-saffron", "#tl-w2"], { opacity: 1 }, T83);
+        $$("#tl-w2 .ch").forEach((el, i) => tl.fromTo(el, { yPercent: 70, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.2, ease: "expo.out" }, T83 - 0.03 + i * 0.03));
+        tl.set("#tl-stripes", { opacity: 1 }, T83);
+        tl.fromTo("#tl-stripes", { scaleX: 0, transformOrigin: "0% 50%" }, { scaleX: 1, duration: 0.24, ease: "expo.out" }, T83);
+        tl.set(["#tl-q1", "#tl-q2"], { opacity: 1 }, T83);
+        tl.fromTo("#tl-q1", { rotation: -90, transformOrigin: "0% 0%" }, { rotation: 0, duration: 0.32, ease: "back.out(1.6)" }, T83 + 0.02);
+        tl.fromTo("#tl-q2", { rotation: -90, transformOrigin: "100% 100%" }, { rotation: 0, duration: 0.32, ease: "back.out(1.6)" }, T83 + 0.06);
+
+        // Hit 3 (fb84): coral ground, the biggest TAAL slams in and eight shapes burst out from behind it.
+        tl.set(["#tl-w2", "#tl-stripes", "#tl-q1", "#tl-q2", "#tl-saffron"], { opacity: 0 }, T84);
+        tl.set(["#tl-coral", "#tl-w3"], { opacity: 1 }, T84);
+        tl.fromTo("#tl-w3", { scale: 1.35, filter: "blur(8px)" }, { scale: 1, filter: "blur(0px)", duration: 0.16, ease: "expo.out" }, T84 - 0.02);
+        const burst = [[-860, -380, 220], [880, -360, -160], [-900, 300, 140], [920, 340, -200], [-260, -520, 260], [300, 540, -240], [-560, 520, 180], [600, -520, -120]];
+        burst.forEach(([dx, dy, rot], i) => {
+          const id = "#tl-b" + (i + 1);
+          tl.set(id, { opacity: 1 }, T84);
+          tl.fromTo(id, { x: 0, y: 0, rotation: 0, scale: 0.4 }, { x: dx, y: dy, rotation: rot, scale: 1.25, duration: 0.55, ease: "power2.out" }, T84 + i * 0.012);
+        });
+        // The drum fill: one letter falls on each 16th while the coral closes like an iris on the point where the dot will land.
+        const drops = [at(84.25), at(84.5), at(84.75), at(84.75) + 0.07];
+        $$("#tl-w3 .ch").forEach((el, i) => tl.to(el, { y: 760, rotation: i % 2 ? 24 : -24, duration: 0.3, ease: "power3.in" }, drops[i]));
+        tl.to(".tl-burst", { opacity: 0, duration: 0.18, ease: "power1.in" }, 1.22);
+        tl.fromTo("#tl-coral", { clipPath: "circle(1400px at 960px 336px)" }, { clipPath: "circle(0px at 960px 336px)", duration: 0.36, ease: "power3.in", immediateRender: false }, 1.1);
+        tl.fromTo("#tl-flat", { opacity: 0 }, { opacity: 1, duration: 0.08, ease: "none" }, DUR - 0.1);
+
+        import("./assets/js/kit.js").then(async (K) => {
+          const { THREE, scene, render } = await K.stage(document.getElementById("tl-canvas"), { ortho: true });
+          const S = 6.0, R = 34 * S;
+          const deg = THREE.MathUtils.degToRad;
+          const ink = K.material(THREE, K.C.ink, { rough: 0.34, clear: 1, env: 0.7 });
+          const cobalt = K.material(THREE, K.C.cobalt, { rough: 0.26, clear: 1, env: 0.7 });
+          const mark = new THREE.Group();
+          scene.add(mark);
+          // Arcs from brand/logo geometry: start angle (deg, counter-clockwise from 3 o'clock), span, stroke.
+          const arcs = [[-21.01, 76.46, 6.0], [-122.76, 76.46, 9.0], [130.03, 76.47, 12.5]].map(([a0, span, stroke]) => {
+            const tube = (stroke / 2) * S;
+            const g = new THREE.Group();
+            g.add(new THREE.Mesh(new THREE.TorusGeometry(R, tube, 48, 160, deg(span)), ink));
+            [0, span].forEach((a) => {
+              const cap = new THREE.Mesh(new THREE.SphereGeometry(tube, 40, 24), ink);
+              cap.position.set(R * Math.cos(deg(a)), R * Math.sin(deg(a)), 0);
+              g.add(cap);
+            });
+            g.rotation.z = deg(a0);
+            const pivot = new THREE.Group();
+            pivot.add(g);
+            mark.add(pivot);
+            return pivot;
+          });
+          const dot = new THREE.Mesh(new THREE.SphereGeometry(10 * S, 64, 48), cobalt);
+          mark.add(dot);
+          const { clamp01, spring, easeIn3, easeOut3 } = K;
+          host.render = (t) => {
+            mark.visible = t >= 1.2;
+            // The whole mark turns about the vertical axis only, so sam stays at 12 o'clock.
+            mark.rotation.y = deg(38) * (1 - easeOut3((t - 1.3) / 0.5));
+            const fall = clamp01((t - 1.24) / 0.28);
+            dot.position.set(0, R + 820 * (1 - easeIn3(fall)), 0);
+            const land = clamp01((t - 1.52) / 0.2);
+            const sq = t < 1.52 ? 0 : (1 - land) * Math.sin(land * Math.PI);
+            dot.scale.set(1 + 0.22 * sq, 1 - 0.3 * sq, 1 + 0.22 * sq);
+            [1.36, 1.42, 1.48].forEach((t0, i) => {
+              const e = spring(clamp01((t - t0) / 0.32));
+              const pv = arcs[i];
+              pv.rotation.z = deg(110) * (1 - e);
+              pv.rotation.x = deg(70) * (1 - e);
+              const sc = Math.max(0.001, 0.55 + 0.45 * Math.min(1.06, e));
+              pv.scale.set(sc, sc, sc);
+              pv.visible = t >= t0;
+            });
+            render();
+          };
+          host.render(clock.t);
+          window.__timelines["taal"] = tl; // registered once the 3D is built
+          ready();
+        }).catch((err) => {
+          console.error("[taal] 3D build failed", err);
+          window.__timelines["taal"] = tl;
+          ready();
+        });
+      }
+      document.fonts.load('900 560px "Inter"').then(build, build);
+    })();
+  </script>
+</template>

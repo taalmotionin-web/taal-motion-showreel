@@ -1,0 +1,158 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: var(--color-cobalt);
+    }
+    #fm-bone { position: absolute; inset: 0; background: var(--color-bone); opacity: 0; }
+    .fm-line {
+      position: absolute;
+      left: 96px;
+      overflow: hidden;
+      white-space: nowrap;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 900;
+      letter-spacing: -0.045em;
+    }
+    .fm-line .ch { display: inline-block; }
+    .fm-a { font-size: 300px; line-height: 300px; height: 300px; color: var(--color-bone); }
+    .fm-b { font-size: 250px; line-height: 250px; height: 250px; color: var(--color-ink); }
+    #fm-one { top: 190.8px; }
+    #fm-story { top: 530.8px; }
+    #fm-every { top: 234px; }
+    #fm-format { top: 574px; }
+    #fm-frame {
+      position: absolute;
+      left: 1170px;
+      top: 135px;
+      width: 640px;
+      height: 810px;
+      overflow: hidden;
+      background: #f4f1ea;
+      clip-path: inset(405px 320px 405px 320px);
+    }
+    .fe { position: absolute; left: 0; top: 0; }
+    #fe1 { width: 456px; height: 228px; border-radius: 228px 228px 0 0; background: #ff4b3e; }
+    #fe2 { width: 230px; height: 230px; border-bottom-left-radius: 230px; background: #ffb02e; }
+    #fe3 { width: 200px; height: 200px; border-radius: 50%; background: #ff4b3e; }
+    #fe3 .w { position: absolute; left: 34px; top: 34px; width: 132px; height: 132px; border-radius: 50%; background: #f4f1ea; }
+    #fe3 .p { position: absolute; left: 70px; top: 70px; width: 60px; height: 60px; border-radius: 50%; background: #14161a; }
+    #fe4 { width: 300px; height: 110px; background: repeating-linear-gradient(to bottom, #14161a 0 12px, transparent 12px 24px); }
+    #fe5 { width: 70px; height: 70px; }
+    #fe5i { position: absolute; inset: 0; border-radius: 50%; background: #ff4b3e; }
+    .fm-pop { position: absolute; opacity: 0; }
+    #fm-chev { position: absolute; left: 96px; top: 880px; width: 1000px; height: 90px; opacity: 0;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='90'><path d='M0 0 L26 45 L0 90 L20 90 L46 45 L20 0 Z' fill='%2314161A'/></svg>");
+      background-repeat: repeat-x; }
+  </style>
+  <div id="root" data-composition-id="formats" data-width="1920" data-height="1080">
+    <div id="fm-bone"></div>
+    <div id="fm-frame">
+      <div class="fe" id="fe1"></div>
+      <div class="fe" id="fe2"></div>
+      <div class="fe" id="fe4"></div>
+      <div class="fe" id="fe3"><div class="w"></div><div class="p" id="fe3p"></div></div>
+      <div class="fe" id="fe5"><div id="fe5i"></div></div>
+    </div>
+    <!-- small things that pop and slide under the words -->
+    <div class="fm-pop" id="fm-p1" style="left:96px;top:900px;width:60px;height:60px;border-radius:50%;background:#ff4b3e"></div>
+    <div class="fm-pop" id="fm-p2" style="left:196px;top:920px;width:84px;height:42px;border-radius:42px 42px 0 0;background:#ffb02e"></div>
+    <div class="fm-pop" id="fm-p3" style="left:320px;top:900px;width:62px;height:62px;border-top-right-radius:62px;background:#f4f1ea"></div>
+    <div class="fm-pop" id="fm-p4" style="left:420px;top:902px;width:56px;height:56px;background:#14161a"></div>
+    <div class="fm-pop" id="fm-p5" style="left:520px;top:912px;width:40px;height:40px;border-radius:50%;background:#f4f1ea"></div>
+    <div id="fm-chev"></div>
+    <div class="fm-line fm-a" id="fm-one"><span class="ch">O</span><span class="ch">N</span><span class="ch">E</span></div>
+    <div class="fm-line fm-a" id="fm-story"><span class="ch">S</span><span class="ch">T</span><span class="ch">O</span><span class="ch">R</span><span class="ch">Y</span></div>
+    <div class="fm-line fm-b" id="fm-every"><span class="ch">E</span><span class="ch">V</span><span class="ch">E</span><span class="ch">R</span><span class="ch">Y</span></div>
+    <div class="fm-line fm-b" id="fm-format"><span class="ch">F</span><span class="ch">O</span><span class="ch">R</span><span class="ch">M</span><span class="ch">A</span><span class="ch">T</span></div>
+  </div>
+  <script>
+    (function () {
+      const START = 632 / 30;
+      const at = (fb) => Math.round(fb * 15.79016) / 30 - START;
+      const root = document.querySelector('[data-composition-id="formats"]');
+      const $$ = (s) => Array.from(root.querySelectorAll(s));
+
+      function kern(line, px) {
+        const c = document.createElement("canvas").getContext("2d");
+        c.font = `900 ${px}px "Inter"`;
+        const chs = Array.from(line.querySelectorAll(".ch"));
+        chs.forEach((el, i) => {
+          if (i === chs.length - 1) return;
+          const a = el.textContent, b = chs[i + 1].textContent;
+          el.style.marginRight = (c.measureText(a + b).width - c.measureText(a).width - c.measureText(b).width).toFixed(2) + "px";
+        });
+      }
+
+      // One design, three formats: each element's centre, scale and rotation in the frame per aspect.
+      const BASE = { fe1: [456, 228], fe2: [230, 230], fe3: [200, 200], fe4: [300, 110], fe5: [70, 70] };
+      const LAYOUT = {
+        wide: { fe1: [180, 510, 0.658, 0], fe2: [560, 305, 0.696, 0], fe3: [320, 360, 0.7, 0], fe4: [510, 517, 0.667, 0], fe5: [586, 426, 0.743, 0] },
+        square: { fe1: [320, 585, 0.877, 0], fe2: [145, 230, 0.913, -90], fe3: [450, 290, 0.85, 0], fe4: [430, 420, 0.767, 0], fe5: [110, 420, 0.857, 0] },
+        tall: { fe1: [320, 696, 1, 0], fe2: [433, 115, 1, 0], fe3: [300, 340, 1, 0], fe4: [300, 520, 1, 0], fe5: [150, 140, 1, 0] },
+      };
+      const pose = (id, L) => {
+        const [cx, cy, s, r] = LAYOUT[L][id];
+        const [w, h] = BASE[id];
+        return { x: cx - w / 2, y: cy - h / 2, scale: s, rotation: r, transformOrigin: "50% 50%" };
+      };
+
+      function build() {
+        $$(".fm-a").forEach((l) => kern(l, 300));
+        $$(".fm-b").forEach((l) => kern(l, 250));
+        const tl = gsap.timeline({ paused: true });
+        const T42 = at(42), T44 = at(44), T46 = at(46);
+        const one = $$("#fm-one .ch"), story = $$("#fm-story .ch"), every = $$("#fm-every .ch"), format = $$("#fm-format .ch");
+        const ids = ["fe1", "fe2", "fe3", "fe4", "fe5"];
+
+        // BOOM (fb40, sam): ONE STORY rides a wave in on cobalt; small shapes pop under it one per 8th.
+        tl.set([...every, ...format], { yPercent: 118 }, 0);
+        [one, story].forEach((row, k) => row.forEach((el, i) =>
+          tl.fromTo(el, { y: 150, rotation: i % 2 ? 8 : -8, opacity: 0 }, { y: 0, rotation: 0, opacity: 1, duration: 0.36, ease: "power4.out" }, (i + k * 3) * 0.033)));
+        [1, 2, 3, 4, 5].forEach((n, i) => {
+          tl.set("#fm-p" + n, { opacity: 1 }, 0.1 + i * 0.263);
+          tl.fromTo("#fm-p" + n, { scale: 0, rotation: -60 }, { scale: 1, rotation: 0, duration: 0.3, ease: "back.out(2.4)" }, 0.1 + i * 0.263);
+        });
+        // fb42: one frame opens at 16:9 and the design pops into it.
+        tl.fromTo("#fm-frame", { clipPath: "inset(405px 320px 405px 320px)" }, { clipPath: "inset(225px 0px 225px 0px)", duration: 0.26, ease: "expo.out" }, T42 - 0.06);
+        ids.forEach((id, i) => {
+          const p = pose(id, "wide");
+          tl.set("#" + id, { x: p.x, y: p.y, rotation: p.rotation, transformOrigin: "50% 50%", scale: 0 }, 0);
+          tl.to("#" + id, { scale: p.scale, duration: 0.34, ease: "back.out(2)" }, T42 + i * 0.05);
+        });
+        [at(43), at(45), at(47)].forEach((b, k) => {
+          tl.to("#fe3p", { x: [-26, 26, 0][k], duration: 0.18, ease: "power3.out" }, b - 0.04);
+          tl.fromTo("#fe5i", { y: 0 }, { y: -60, duration: 0.15, ease: "power2.out", yoyo: true, repeat: 1, immediateRender: false }, b);
+        });
+        // fb44: ground to bone, the words roll to EVERY FORMAT, the frame morphs to 1:1 and the design rearranges itself.
+        tl.set("#fm-bone", { opacity: 1 }, T44);
+        [...one, ...story].forEach((el, i) => tl.to(el, { yPercent: -118, duration: 0.09, ease: "power3.in" }, T44 - 0.12 + (i % 5) * 0.025));
+        tl.set([...one, ...story], { opacity: 0 }, T44 + 0.1);
+        [...every, ...format].forEach((el, i) => tl.fromTo(el, { yPercent: 118 }, { yPercent: 0, duration: 0.1, ease: "power3.out" }, T44 - 0.1 + i * 0.022));
+        tl.to(["#fm-p1", "#fm-p2", "#fm-p3", "#fm-p4", "#fm-p5"], { x: -800, duration: 0.24, ease: "power3.in", stagger: 0.02 }, T44 - 0.1);
+        tl.set("#fm-chev", { opacity: 1 }, T44);
+        tl.fromTo("#fm-chev", { backgroundPositionX: "0px" }, { backgroundPositionX: "-560px", duration: 2.1, ease: "none" }, T44);
+        tl.fromTo("#fm-chev", { clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.3, ease: "expo.out" }, T44);
+        const morph = (T, L, bg, recolor) => {
+          tl.to("#fm-frame", { clipPath: L === "square" ? "inset(125px 40px 125px 40px)" : "inset(0px 92px 0px 92px)", duration: 0.22, ease: "power3.out" }, T - 0.05);
+          tl.set("#fm-frame", { backgroundColor: bg }, T);
+          recolor.forEach(([sel, prop, val]) => tl.set(sel, { [prop]: val }, T));
+          ids.forEach((id, i) => tl.to("#" + id, Object.assign(pose(id, L), { duration: 0.34, ease: "back.out(1.5)" }), T - 0.06 + i * 0.03));
+        };
+        morph(T44, "square", "#14161a", [["#fe4", "backgroundImage", "repeating-linear-gradient(to bottom, #f4f1ea 0 12px, transparent 12px 24px)"], ["#fe5i", "backgroundColor", "#ffb02e"]]);
+        // fb46: the frame morphs to 9:16.
+        morph(T46, "tall", "#ffb02e", [["#fe2", "backgroundColor", "#14161a"], ["#fe4", "backgroundImage", "repeating-linear-gradient(to bottom, #14161a 0 12px, transparent 12px 24px)"], ["#fe5i", "backgroundColor", "#ff4b3e"]]);
+        // EVERY FORMAT hops on the beats that follow.
+        [at(45), at(47)].forEach((b) => [...every, ...format].forEach((el, i) => {
+          tl.fromTo(el, { y: 0 }, { y: -36, duration: 0.12, ease: "power2.out", immediateRender: false }, b + i * 0.02);
+          tl.to(el, { y: 0, duration: 0.2, ease: "bounce.out" }, b + 0.12 + i * 0.02);
+        }));
+
+        window.__timelines["formats"] = tl;
+      }
+      document.fonts.load('900 300px "Inter"').then(build, build);
+    })();
+  </script>
+</template>

@@ -1,0 +1,67 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    #l3-canvas {
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 1080px;
+      display: block;
+    }
+  </style>
+  <!-- 3D layer over the LAUNCH FILMS scene: one Bauhaus object launches out of the split on each beat (fb11-fb14). -->
+  <div id="root" data-composition-id="launch3d" data-width="1920" data-height="1080" data-motion-blur="off">
+    <canvas id="l3-canvas" width="1920" height="1080"></canvas>
+  </div>
+  <script>
+    (function () {
+      const START = 126 / 30, DUR = 4.2333;
+      const at = (fb) => Math.round(fb * 15.79016) / 30 - START;
+      const clock = { t: 0 };
+      const host = { render: null };
+      window.__hf = window.__hf || {};
+      window.__hf.buildReady = window.__hf.buildReady || {};
+      let ready;
+      window.__hf.buildReady["launch3d"] = new Promise((r) => (ready = r));
+      const tl = gsap.timeline({ paused: true });
+      tl.to(clock, { t: DUR, duration: DUR, ease: "none", onUpdate: () => host.render && host.render(clock.t) });
+      const launches = [at(11), at(12), at(13), at(14)];
+
+      import("./assets/js/kit.js").then(async (K) => {
+        const { THREE, scene, render } = await K.stage(document.getElementById("l3-canvas"), { z: 12 });
+        const { spring, clamp01 } = K;
+        const set = [["sphere", K.C.coral, -2.3, 1.0], ["ring", K.C.saffron, 1.9, 1.1], ["cone", K.C.bone, -0.5, 1.2], ["capsule", K.C.ink, 2.7, 1.0]];
+        const objs = set.map(([k, col, x, s], i) => {
+          const o = K.shape(THREE, k, col);
+          o.visible = false;
+          scene.add(o);
+          return { o, x, s, T: launches[i], drift: (i % 2 ? -1 : 1) * 0.6 };
+        });
+        host.render = (t) => {
+          objs.forEach((B, i) => {
+            const u = t - B.T;
+            B.o.visible = u >= 0;
+            if (u < 0) return;
+            // pop in the gap, then accelerate up and out of the top, spinning
+            const rise = u < 0.18 ? 0 : 5.6 * (u - 0.18) * (u - 0.18);
+            B.o.position.set(B.x + B.drift * u, 0.1 + rise, 0.5);
+            B.o.scale.setScalar(Math.max(0.001, B.s * spring(clamp01(u / 0.36))));
+            B.o.rotation.set(0.4 + u * 2.2, u * 4.2 + i, Math.sin(u * 3) * 0.3);
+          });
+          render();
+        };
+        host.render(clock.t);
+        window.__timelines["launch3d"] = tl; // registered once the 3D is built
+        ready();
+      }).catch((err) => {
+        console.error("[launch3d] 3D build failed", err);
+        window.__timelines["launch3d"] = tl;
+        ready();
+      });
+    })();
+  </script>
+</template>

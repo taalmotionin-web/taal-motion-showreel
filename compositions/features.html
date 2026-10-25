@@ -1,0 +1,78 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: var(--color-bone);
+    }
+    .ft-word {
+      position: absolute;
+      left: 96px;
+      white-space: nowrap;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 900;
+      font-size: 270px;
+      line-height: 270px;
+      letter-spacing: -0.045em;
+      color: var(--color-ink);
+    }
+    .ft-word .ch { display: inline-block; }
+    #ft-features { top: 66.7px; }
+    #ft-shipped { top: 756.7px; }
+    #ft-mark { position: absolute; left: 80px; top: 800px; width: 1330px; height: 210px; background: #ffb02e; transform-origin: 0% 50%; }
+    #ft-band {
+      position: absolute;
+      left: 96px;
+      top: 340px;
+      width: 1728px;
+      height: 420px;
+      overflow: hidden;
+    }
+    #ft-band video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: 50% 26%;
+    }
+    #ft-q { position: absolute; left: 1600px; top: 860px; width: 220px; height: 220px; border-top-left-radius: 220px; background: #ff4b3e; }
+  </style>
+  <div id="root" data-composition-id="features" data-width="1920" data-height="1080" data-motion-blur="off">
+    <div id="ft-band"><video id="ft-v-dash" class="clip" src="assets/media/dashboard.mp4" data-start="0.1" data-duration="2.0" data-media-start="2.5" data-track-index="2" muted playsinline></video></div>
+    <div class="ft-word" id="ft-features"><span class="ch">F</span><span class="ch">E</span><span class="ch">A</span><span class="ch">T</span><span class="ch">U</span><span class="ch">R</span><span class="ch">E</span><span class="ch">S</span></div>
+    <div id="ft-mark"></div>
+    <div id="ft-q"></div>
+    <div class="ft-word" id="ft-shipped">SHIPPED</div>
+  </div>
+  <script>
+    (function () {
+      const START = 505 / 30;
+      const at = (fb) => Math.round(fb * 15.79016) / 30 - START;
+      const root = document.querySelector('[data-composition-id="features"]');
+      function build() {
+        const c = document.createElement("canvas").getContext("2d");
+        c.font = '900 270px "Inter"';
+        const chs = Array.from(root.querySelectorAll("#ft-features .ch"));
+        chs.forEach((el, i) => {
+          if (i === chs.length - 1) return;
+          const a = el.textContent, b = chs[i + 1].textContent;
+          el.style.marginRight = (c.measureText(a + b).width - c.measureText(a).width - c.measureText(b).width).toFixed(2) + "px";
+        });
+        const tl = gsap.timeline({ paused: true });
+        const T34 = at(34);
+        // Hard cut in on fb32: FEATURES pops up letter by letter, the dashboard rises into the band.
+        chs.forEach((el, i) => tl.fromTo(el, { scale: 0, y: 60, transformOrigin: "50% 100%" }, { scale: 1, y: 0, duration: 0.3, ease: "back.out(2.2)" }, i * 0.028));
+        tl.fromTo("#ft-band", { y: 520 }, { y: 0, duration: 0.34, ease: "expo.out" }, 0.04);
+        // fb34: the cursor in the clip clicks Export; a saffron bar wipes in and SHIPPED stamps onto it.
+        tl.fromTo("#ft-mark", { scaleX: 0 }, { scaleX: 1, duration: 0.2, ease: "expo.out" }, T34 - 0.08);
+        tl.fromTo("#ft-shipped", { scale: 1.22, opacity: 0, filter: "blur(6px)", transformOrigin: "0% 70%" },
+          { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.16, ease: "expo.out" }, T34 - 0.02);
+        tl.fromTo("#ft-q", { rotation: -90, transformOrigin: "100% 100%" }, { rotation: 0, duration: 0.34, ease: "back.out(1.8)" }, T34 + 0.04);
+        window.__timelines["features"] = tl;
+      }
+      document.fonts.load('900 270px "Inter"').then(build, build);
+    })();
+  </script>
+</template>

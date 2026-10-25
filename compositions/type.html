@@ -1,0 +1,126 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: var(--color-ink);
+    }
+    .ty-word {
+      position: absolute;
+      left: 96px;
+      white-space: nowrap;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 900;
+      font-size: 290px;
+      line-height: 290px;
+      letter-spacing: -0.045em;
+      color: var(--color-bone);
+    }
+    .ty-word .ch { display: inline-block; }
+    .ty-word .w { display: inline-block; }
+    #ty-type { top: 79.4px; }
+    #ty-that { top: 389.4px; opacity: 0; }
+    #ty-moves { top: 699.4px; }
+    #ty-chev { position: absolute; left: 0; top: 400px; width: 1920px; height: 290px; clip-path: inset(0% 0% 0% 100%);
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='72' height='96'><path d='M0 0 L30 48 L0 96 L24 96 L54 48 L24 0 Z' fill='%23FF4B3E'/></svg>");
+      background-repeat: repeat; }
+    #ty-tunnel { position: absolute; left: 1420px; top: 40px; width: 480px; height: 1000px; overflow: hidden; }
+    .ty-bar { position: absolute; left: 0; top: 0; width: 20px; height: 860px; border-radius: 10px; background: var(--color-bone); }
+    #ty-dot { position: absolute; left: 0; top: 0; width: 42px; height: 42px; border-radius: 50%; background: var(--color-cobalt); }
+    #ty-flood { position: absolute; inset: 0; background: var(--color-cobalt); clip-path: circle(0px at 0px 0px); }
+  </style>
+  <div id="root" data-composition-id="type" data-width="1920" data-height="1080">
+    <div id="ty-tunnel" data-layout-ignore></div>
+    <div id="ty-chev" data-layout-ignore></div>
+    <div class="ty-word" id="ty-type"><span class="ch">T</span><span class="ch">Y</span><span class="ch">P</span><span class="ch">E</span></div>
+    <div class="ty-word" id="ty-that"><span class="ch">T</span><span class="ch">H</span><span class="ch">A</span><span class="ch">T</span></div>
+    <div class="ty-word" id="ty-moves"><span class="ch"><span class="w">M</span></span><span class="ch"><span class="w">O</span></span><span class="ch"><span class="w">V</span></span><span class="ch"><span class="w">E</span></span><span class="ch"><span class="w">S</span></span></div>
+    <div id="ty-dot"></div>
+    <div id="ty-flood"></div>
+  </div>
+  <script>
+    (function () {
+      const START = 758 / 30, DUR = 4.2;
+      const at = (fb) => Math.round(fb * 15.79016) / 30 - START;
+      const root = document.querySelector('[data-composition-id="type"]');
+      const $ = (s) => root.querySelector(s);
+      const $$ = (s) => Array.from(root.querySelectorAll(s));
+
+      function kern(line) {
+        const c = document.createElement("canvas").getContext("2d");
+        c.font = '900 290px "Inter"';
+        const chs = Array.from(line.querySelectorAll(".ch"));
+        chs.forEach((el, i) => {
+          if (i === chs.length - 1) return;
+          const a = el.textContent, b = chs[i + 1].textContent;
+          el.style.marginRight = (c.measureText(a + b).width - c.measureText(a).width - c.measureText(b).width).toFixed(2) + "px";
+        });
+      }
+
+      function build() {
+        $$(".ty-word").forEach(kern);
+        // The tunnel: bars on both sides of a vanishing point, flying toward the viewer and pulsing on the beat.
+        const tun = $("#ty-tunnel");
+        const N = 9, bars = [];
+        for (let i = 0; i < N * 2; i++) {
+          const b = document.createElement("div");
+          b.className = "ty-bar";
+          tun.appendChild(b);
+          bars.push({ el: b, k: i % N, side: i < N ? -1 : 1 });
+        }
+        const beats = [48, 49, 50, 51, 52, 53, 54].map(at);
+        const hump = (x) => (x <= 0 || x >= 1 ? 0 : Math.sin(Math.PI * x) * (1 - x) * 1.6);
+        const tPick = 29.07 - START;
+        const moves = $$("#ty-moves .w");
+        const draw = (t) => {
+          const pulse = beats.reduce((a, b) => a + hump((t - b) / 0.32), 0);
+          bars.forEach((B) => {
+            const z = 1 + (((B.k / N - t * 0.55) % 1) + 1) % 1 * 7; // depth 1 (near) .. 8 (far), moving closer
+            const s = 1 / z;
+            const x = 240 + B.side * 215 * s - 10;
+            const h = s * (1 + 0.28 * pulse);
+            B.el.style.transform = `translate(${x.toFixed(1)}px, ${(500 - 430).toFixed(1)}px) scale(${s.toFixed(4)}, ${h.toFixed(4)})`;
+            B.el.style.opacity = Math.min(1, (8.5 - z) / 2.5).toFixed(3);
+          });
+          // MOVES keeps moving: a wave runs through its letters.
+          const on = Math.min(1, Math.max(0, (t - (at(52) + 0.35)) / 0.3));
+          moves.forEach((el, i) => {
+            el.style.transform = `translateY(${(on * 26 * Math.sin(2 * Math.PI * 1.9 * t - i * 0.9)).toFixed(1)}px) rotate(${(on * 4 * Math.cos(2 * Math.PI * 1.9 * t - i * 0.9)).toFixed(2)}deg)`;
+          });
+        };
+        const clock = { t: 0 };
+        const tl = gsap.timeline({ paused: true });
+        tl.to(clock, { t: DUR, duration: DUR, ease: "none", onUpdate: () => draw(clock.t) });
+        const T50 = at(50), T51 = at(51), T52 = at(52);
+
+        // TYPE: every letter enters its own way.
+        const [tT, tY, tP, tE] = $$("#ty-type .ch");
+        tl.fromTo(tT, { rotation: -90, transformOrigin: "0% 100%" }, { rotation: 0, duration: 0.4, ease: "back.out(1.4)" }, 0);
+        tl.fromTo(tY, { rotationY: 180, transformPerspective: 900, opacity: 0 }, { rotationY: 0, opacity: 1, duration: 0.42, ease: "expo.out" }, 0.06);
+        tl.fromTo(tP, { y: -520 }, { y: 0, duration: 0.5, ease: "bounce.out" }, 0.1);
+        tl.fromTo(tE, { scaleX: 0, transformOrigin: "0% 50%" }, { scaleX: 1, duration: 0.32, ease: "expo.out" }, 0.18);
+        // THAT: whips in from the right over coral chevrons that never stop sliding.
+        tl.set("#ty-that", { opacity: 1 }, T50 - 0.04);
+        tl.fromTo("#ty-that", { x: 900, skewX: -28 }, { x: 0, skewX: 0, duration: 0.36, ease: "expo.out" }, T50 - 0.04);
+        tl.fromTo("#ty-chev", { clipPath: "inset(0% 0% 0% 100%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.3, ease: "expo.out" }, T50 - 0.06);
+        tl.fromTo("#ty-chev", { backgroundPositionX: "0px" }, { backgroundPositionX: "-720px", duration: DUR - T50, ease: "none" }, T50 - 0.06);
+        $$("#ty-that .ch").forEach((el, i) => tl.fromTo(el, { scaleY: 0.7, transformOrigin: "50% 100%" }, { scaleY: 1, duration: 0.4, ease: "elastic.out(1, 0.4)", immediateRender: false }, T51 + i * 0.04));
+        // MOVES: pops in, then the wave takes over.
+        $$("#ty-moves .ch").forEach((el, i) => tl.fromTo(el, { scale: 0, transformOrigin: "50% 100%" }, { scale: 1, duration: 0.34, ease: "back.out(2.5)" }, T52 - 0.04 + i * 0.04));
+
+        // The splice and pickup: the cobalt full stop lands after MOVES, everything blurs away, the dot floods on sam (fb56).
+        const s = root.getBoundingClientRect().width / 1920 || 1;
+        const dx = 96 + $("#ty-moves").getBoundingClientRect().width / s + 12, dy = 699.4 + 0.864 * 290 - 42;
+        tl.set("#ty-dot", { x: dx, y: dy, scale: 0 }, 0);
+        tl.fromTo("#ty-dot", { scale: 0 }, { scale: 1, duration: 0.24, ease: "back.out(2.4)", immediateRender: false }, tPick - 0.05);
+        tl.to(["#ty-type", "#ty-that", "#ty-moves", "#ty-chev", "#ty-tunnel"], { opacity: 0, filter: "blur(10px)", duration: 0.13, ease: "power2.in", stagger: 0.02 }, tPick + 0.02);
+        tl.fromTo("#ty-flood", { clipPath: `circle(0px at ${dx + 21}px ${dy + 21}px)` },
+          { clipPath: `circle(2400px at ${dx + 21}px ${dy + 21}px)`, duration: 0.2, ease: "power3.in" }, DUR - 0.2);
+        draw(0);
+        window.__timelines["type"] = tl;
+      }
+      document.fonts.load('900 290px "Inter"').then(build, build);
+    })();
+  </script>
+</template>

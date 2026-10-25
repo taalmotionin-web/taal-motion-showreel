@@ -1,0 +1,130 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: var(--color-cobalt);
+    }
+    .ln-row {
+      position: absolute;
+      left: 96px;
+      white-space: nowrap;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 900;
+      font-size: 360px;
+      line-height: 360px;
+      letter-spacing: -0.045em;
+      color: var(--color-bone);
+    }
+    .ln-row .ch {
+      display: inline-block;
+    }
+    /* baseline sits 0.864em below the line-box top for Inter at line-height 1 */
+    #ln-row1 { top: 159px; }
+    #ln-row2 { top: 519px; }
+    #ln-band {
+      position: absolute;
+      clip-path: inset(50% 0% 50% 0%);
+      left: 0;
+      top: 382px;
+      height: 280px;
+      width: 2100px;
+      display: flex;
+    }
+    .ln-tile {
+      position: relative;
+      width: 498px;
+      height: 280px;
+      flex: none;
+      overflow: hidden;
+      margin-right: 12px;
+    }
+    .ln-tile video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .ln-ring {
+      position: absolute;
+      left: 810px;
+      top: 374px;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      border: 6px solid var(--color-bone);
+      opacity: 0;
+    }
+  </style>
+  <div id="root" data-composition-id="launch" data-width="1920" data-height="1080" data-motion-blur="off">
+    <div id="ln-band">
+      <div class="ln-tile"><video id="ln-v1" class="clip" src="assets/media/orbit-reel.mp4" data-start="0.45" data-duration="1.3" data-media-start="4.2" data-track-index="2" muted playsinline></video></div>
+      <div class="ln-tile"><video id="ln-v2" class="clip" src="assets/media/duskbean.mp4" data-start="0.45" data-duration="1.3" data-media-start="7.6" data-track-index="3" muted playsinline></video></div>
+      <div class="ln-tile"><video id="ln-v3" class="clip" src="assets/media/post2.mp4" data-start="0.45" data-duration="1.3" data-media-start="1.6" data-track-index="4" muted playsinline></video></div>
+      <div class="ln-tile"><video id="ln-v4" class="clip" src="assets/media/post1.mp4" data-start="0.45" data-duration="1.3" data-media-start="4.0" data-track-index="5" muted playsinline></video></div>
+    </div>
+    <div class="ln-ring" id="ln-r1"></div><div class="ln-ring" id="ln-r2"></div><div class="ln-ring" id="ln-r3"></div><div class="ln-ring" id="ln-r4"></div>
+    <div class="ln-row" id="ln-row1" data-layout-bleed="true"><span class="ch">L</span><span class="ch">A</span><span class="ch">U</span><span class="ch">N</span><span class="ch">C</span><span class="ch">H</span></div>
+    <div class="ln-row" id="ln-row2" data-layout-bleed="true"><span class="ch">F</span><span class="ch">I</span><span class="ch">L</span><span class="ch">M</span><span class="ch">S</span></div>
+  </div>
+  <script>
+    (function () {
+      const START = 126 / 30, DUR = 4.2333;
+      const at = (fb) => Math.round(fb * 15.79016) / 30 - START;
+      const root = document.querySelector('[data-composition-id="launch"]');
+      const $$ = (s) => Array.from(root.querySelectorAll(s));
+      const FONT = '900 360px "Inter"';
+
+      function kern(line) {
+        const c = document.createElement("canvas").getContext("2d");
+        c.font = FONT;
+        const chs = Array.from(line.querySelectorAll(".ch"));
+        chs.forEach((el, i) => {
+          if (i === chs.length - 1) return;
+          const a = el.textContent, b = chs[i + 1].textContent;
+          el.style.marginRight = (c.measureText(a + b).width - c.measureText(a).width - c.measureText(b).width).toFixed(2) + "px";
+        });
+      }
+
+      function build() {
+        $$(".ln-row").forEach(kern);
+        const tl = gsap.timeline({ paused: true });
+        const r1 = $$("#ln-row1 .ch"), r2 = $$("#ln-row2 .ch");
+        const T9 = at(9), T11 = at(11), T15 = at(15);
+        const launches = [at(11), at(12), at(13), at(14)];
+
+        // Drop (fb8): both rows ride a wave in, each letter stretched then settling.
+        [r1, r2].forEach((row, k) => row.forEach((el, i) => {
+          const t0 = (i + k * 2) * 0.033;
+          tl.fromTo(el, { y: 160, rotation: i % 2 ? 10 : -10, opacity: 0 }, { y: 0, rotation: 0, opacity: 1, duration: 0.36, ease: "power4.out" }, t0);
+          tl.fromTo(el, { scaleY: 1.35, transformOrigin: "50% 100%" }, { scaleY: 1, duration: 0.5, ease: "elastic.out(1, 0.45)" }, t0);
+        }));
+        // fb9: the rows open and a filmstrip of launch films runs between them.
+        tl.fromTo("#ln-row1", { y: 0 }, { y: -100, duration: 0.24, ease: "power3.out" }, T9 - 0.08);
+        tl.fromTo("#ln-row2", { y: 0 }, { y: 110, duration: 0.24, ease: "power3.out" }, T9 - 0.08);
+        tl.fromTo("#ln-band", { x: -40 }, { x: -40 - 1150 * (T11 - (T9 - 0.08)), duration: T11 - (T9 - 0.08), ease: "none" }, T9 - 0.08);
+        tl.fromTo("#ln-band", { clipPath: "inset(50% 0% 50% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.24, ease: "power3.out" }, T9 - 0.08);
+        // fb11: the band whips out, the rows split to the edges, and 3D objects launch out of the gap, one a beat.
+        tl.to("#ln-band", { x: "-=1700", duration: 0.16, ease: "power3.in" }, T11);
+        tl.to("#ln-row1", { y: -235, duration: 0.3, ease: "expo.out" }, T11);
+        tl.to("#ln-row2", { y: 245, duration: 0.3, ease: "expo.out" }, T11);
+        launches.forEach((T, i) => {
+          const id = "#ln-r" + (i + 1);
+          tl.fromTo(id, { scale: 0.2, opacity: 1 }, { scale: 2.6, opacity: 0, duration: 0.5, ease: "power2.out", immediateRender: false }, T);
+        });
+        // The rows hop on each launch.
+        launches.slice(1).forEach((T) => {
+          tl.fromTo(["#ln-row1 .ch", "#ln-row2 .ch"], { scaleY: 0.9, transformOrigin: "50% 100%" }, { scaleY: 1, duration: 0.3, ease: "elastic.out(1, 0.5)", stagger: 0.012, immediateRender: false }, T);
+        });
+        // fb15: the rows whip out left and right, leaving clean cobalt for the cut.
+        tl.to("#ln-row1", { x: -2000, duration: 0.24, ease: "power3.in" }, T15 + 0.03);
+        tl.to("#ln-row2", { x: 2000, duration: 0.24, ease: "power3.in" }, T15 + 0.05);
+
+        window.__timelines["launch"] = tl;
+      }
+      document.fonts.load(FONT).then(build, build);
+    })();
+  </script>
+</template>
